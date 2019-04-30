@@ -11,7 +11,7 @@
 #include <iostream>
 #include <vector>
 
-#define STB_IMAGE_IMPLEMENTATION    
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #include "shader.hpp"
@@ -38,7 +38,7 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    float cameraSpeed = 2.5 * deltaTime; 
+    float cameraSpeed = 2.5 * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -57,10 +57,10 @@ void processInput(GLFWwindow *window)
 
 int main()
 {
-    
+
     GLFWwindow* window;
     GLuint VAO, VBO;
-    
+
 
     float stripVertices[] = {
         -0.5f, -0.5f, -0.5f,  0.0f, -0.0f,
@@ -131,7 +131,7 @@ int main()
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(stripVertices), stripVertices, GL_STATIC_DRAW);
-    
+
 
     Shader ourShader("shaders/vertexShader.vs", "shaders/fragmentShader.fs");
 

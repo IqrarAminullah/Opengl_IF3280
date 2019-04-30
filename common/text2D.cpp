@@ -1,15 +1,3 @@
-#include <vector>
-#include <cstring>
-
-#include <GL/glew.h>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-using namespace glm;
-
-#include "shader.hpp"
-#include "texture.hpp"
-
 #include "text2D.hpp"
 
 unsigned int Text2DTextureID;
@@ -43,7 +31,6 @@ void printText2D(const char * text, int x, int y, int size){
 	std::vector<glm::vec2> vertices;
 	std::vector<glm::vec2> UVs;
 	for ( unsigned int i=0 ; i<length ; i++ ){
-		
 		glm::vec2 vertex_up_left    = glm::vec2( x+i*size     , y+size );
 		glm::vec2 vertex_up_right   = glm::vec2( x+i*size+size, y+size );
 		glm::vec2 vertex_down_right = glm::vec2( x+i*size+size, y      );
