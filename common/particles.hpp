@@ -16,12 +16,14 @@ class Particle {
         bool isAlive();
         void update();
         void draw(GLuint shaders);
+        void scale(GLfloat scaleFactor);
 
     private:
         glm::vec3 position;
         glm::vec3 velocity;
         GLfloat life;
         GLfloat dt;
+        GLfloat scaleFactor;
 
         GLuint vertexbuffer;
         GLuint uvbuffer;
@@ -39,6 +41,7 @@ class ParticleGenerator {
         void draw(GLuint shaders);
         void setInitialPosition(glm::vec3 position, glm::vec3 randomPositionRadius);
         void setInitialVelocity(glm::vec3 velocity, glm::vec3 randomVelocityRadius);
+        void scale(GLfloat scaleFactor);
 
     private:
         GLuint nr_particles;

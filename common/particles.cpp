@@ -12,6 +12,8 @@ Particle::Particle(GLfloat dt, GLuint numVertices, GLuint vertexbuffer, GLuint u
     this->normalbuffer = normalbuffer;
 
     this->numVertices = numVertices;
+
+    this->scaleFactor = 1.0f;
 }
 
 void Particle::respawn(glm::vec3 position, glm::vec3 velocity)
@@ -48,7 +50,7 @@ void Particle::draw(GLuint shaders)
         GLuint alphaID = glGetUniformLocation(shaders, "alpha");
 
         glUniform3f(offsetID, this->position.x, this->position.y, this->position.z);
-        glUniform1f(scaleID, 0.01f);
+        glUniform1f(scaleID, this->scaleFactor);
         glUniform1f(alphaID, this->life);
 
         // 1rst attribute buffer : vertices
@@ -94,6 +96,10 @@ void Particle::draw(GLuint shaders)
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
     }
+}
+
+void Particle::scale(GLfloat scaleFactor) {
+    this->scaleFactor *= scaleFactor;
 }
 
 ParticleGenerator::ParticleGenerator(GLuint nr_particles, GLfloat dt, const char * objpath)
@@ -216,4 +222,12 @@ void ParticleGenerator::setInitialVelocity(glm::vec3 velocity, glm::vec3 randomV
 {
     this->initialVelocity = velocity;
     this->randomVelocityRadius = randomVelocityRadius;
+}
+
+void ParticleGenerator::scale(GLfloat scaleFactor)
+{
+    for (Particle* particle : *(this->particles))
+    {
+        particle->scale(scaleFactor);
+    }
 }

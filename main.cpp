@@ -123,13 +123,15 @@ int main( void )
 	GLuint alphaID = glGetUniformLocation(programID, "alpha");
 
 	// particles
-	ParticleGenerator* asap = new ParticleGenerator(200, 0.04f, "models/jimny2.obj");
+	ParticleGenerator* asap = new ParticleGenerator(200, 0.04f, "models/raindrop.obj");
 	asap->setInitialPosition(glm::vec3(0.0f, 3.0f, 7.0f), glm::vec3(0.5f, 0.5f, 0.5f));
 	asap->setInitialVelocity(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(1.0f, 0.1f, 1.0f));
+	asap->scale(0.1f);
 
-	ParticleGenerator* hujan = new ParticleGenerator(500, 0.01f, "models/jimny2.obj");
+	ParticleGenerator* hujan = new ParticleGenerator(500, 0.01f, "models/raindrop.obj");
 	hujan->setInitialPosition(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(10.0f, 0.1f, 10.0f));
 	hujan->setInitialVelocity(glm::vec3(0.0f, 20.0f, 0.0f), glm::vec3(1.0f, 0.1f, 1.0f));
+	hujan->scale(0.1f);
 
 	do {
 		// Clear the screen
