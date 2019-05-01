@@ -127,6 +127,12 @@ ParticleGenerator::ParticleGenerator(GLuint nr_particles, GLfloat dt, const char
                 this->normalbuffer
             )
         );
+
+    this->initialPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+    this->randomPositionRadius = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    this->initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+    this->randomVelocityRadius = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
 int ParticleGenerator::firstUnusedParticle()
@@ -150,14 +156,21 @@ int ParticleGenerator::firstUnusedParticle()
     return -1;
 }
 
-void ParticleGenerator::respawnParticle(Particle* particle, glm::vec3 offset)
+void ParticleGenerator::respawnParticle(Particle* particle)
 {
-    GLfloat random = ((rand() % 100) - 50) / 50.0f;
-    GLfloat randomX = ((rand() % 100) - 50) / 50.0f;
-    GLfloat randomZ = ((rand() % 100) - 50) / 50.0f;
+    glm::vec3 randomPosition = glm::vec3(
+        ((rand() % int(this->randomPositionRadius.x * 200)) / 100.0f - this->randomPositionRadius.x),
+        ((rand() % int(this->randomPositionRadius.y * 200)) / 100.0f - this->randomPositionRadius.y),
+        ((rand() % int(this->randomPositionRadius.z * 200)) / 100.0f - this->randomPositionRadius.z)
+    );
+    glm::vec3 randomVelocity = glm::vec3(
+        ((rand() % int(this->randomVelocityRadius.x * 200)) / 100.0f - this->randomVelocityRadius.x),
+        ((rand() % int(this->randomVelocityRadius.y * 200)) / 100.0f - this->randomVelocityRadius.y),
+        ((rand() % int(this->randomVelocityRadius.z * 200)) / 100.0f - this->randomVelocityRadius.z)
+    );
 
-    glm::vec3 newPosition = random + offset;
-    glm::vec3 newVelocity = glm::vec3(randomX, -2.0f, randomZ);
+    glm::vec3 newPosition = randomPosition + this->initialPosition;
+    glm::vec3 newVelocity = randomVelocity + this->initialVelocity;
     particle->respawn(newPosition, newVelocity);
 }
 
@@ -176,7 +189,7 @@ void ParticleGenerator::update()
     {
         int unusedParticle = this->firstUnusedParticle();
         if (unusedParticle != -1) {
-            this->respawnParticle(this->particles->at(unusedParticle), glm::vec3(0, 3, 7));
+            this->respawnParticle(this->particles->at(unusedParticle));
         }
     }
 }
@@ -187,4 +200,16 @@ void ParticleGenerator::draw(GLuint shaders)
     {
         particle->draw(shaders);
     }
+}
+
+void ParticleGenerator::setInitialPosition(glm::vec3 position, glm::vec3 randomPositionRadius)
+{
+    this->initialPosition = position;
+    this->randomPositionRadius = randomPositionRadius;
+}
+
+void ParticleGenerator::setInitialVelocity(glm::vec3 velocity, glm::vec3 randomVelocityRadius)
+{
+    this->initialVelocity = velocity;
+    this->randomVelocityRadius = randomVelocityRadius;
 }

@@ -34,9 +34,11 @@ class ParticleGenerator {
     public:
         ParticleGenerator(GLuint nr_particles, GLfloat dt, const char * objpath);
         int firstUnusedParticle();
-        void respawnParticle(Particle* particle, glm::vec3 offset);
+        void respawnParticle(Particle* particle);
         void update();
         void draw(GLuint shaders);
+        void setInitialPosition(glm::vec3 position, glm::vec3 randomPositionRadius);
+        void setInitialVelocity(glm::vec3 velocity, glm::vec3 randomVelocityRadius);
 
     private:
         GLuint nr_particles;
@@ -50,6 +52,12 @@ class ParticleGenerator {
         GLuint vertexbuffer;
         GLuint uvbuffer;
         GLuint normalbuffer;
+
+        glm::vec3 initialPosition;
+        glm::vec3 randomPositionRadius;
+
+        glm::vec3 initialVelocity;
+        glm::vec3 randomVelocityRadius;
 };
 
 #endif

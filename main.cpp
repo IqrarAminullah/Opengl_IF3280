@@ -123,7 +123,13 @@ int main( void )
 	GLuint alphaID = glGetUniformLocation(programID, "alpha");
 
 	// particles
-	ParticleGenerator* asap = new ParticleGenerator(500, 0.04f, "models/jimny2.obj");
+	ParticleGenerator* asap = new ParticleGenerator(200, 0.04f, "models/jimny2.obj");
+	asap->setInitialPosition(glm::vec3(0.0f, 3.0f, 7.0f), glm::vec3(0.5f, 0.5f, 0.5f));
+	asap->setInitialVelocity(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(1.0f, 0.1f, 1.0f));
+
+	ParticleGenerator* hujan = new ParticleGenerator(500, 0.01f, "models/jimny2.obj");
+	hujan->setInitialPosition(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(10.0f, 0.1f, 10.0f));
+	hujan->setInitialVelocity(glm::vec3(0.0f, 20.0f, 0.0f), glm::vec3(1.0f, 0.1f, 1.0f));
 
 	do {
 		// Clear the screen
@@ -154,6 +160,7 @@ int main( void )
 		glUniform3f(LightID2, light2Pos.x, light2Pos.y, light2Pos.z);
 
 		asap->update();
+		hujan->update();
 
 		// Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
@@ -208,6 +215,7 @@ int main( void )
 		glDisableVertexAttribArray(2);
 
 		asap->draw(programID);
+		hujan->draw(programID);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
