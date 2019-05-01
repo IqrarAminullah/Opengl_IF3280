@@ -21,6 +21,49 @@ using namespace glm;
 #include "common/objloader.hpp"
 #include "common/vboindexer.hpp"
 
+struct Particle {
+    glm::vec3 Position, Velocity;
+    GLfloat Life;
+
+    Particle() {
+		Position = glm::vec3(7.0f, 7.0f, -7.0f);
+		Velocity = glm::vec3(0.0f, -1.0f, 0.0f);
+		Life = 0.0f;
+	}
+};
+
+GLuint lastUsedParticle = 0;
+GLuint FirstUnusedParticle(std::vector<Particle>& particles, GLuint nr_particles)
+{
+    // Search from last used particle, this will usually return almost instantly
+    for (GLuint i = lastUsedParticle; i < nr_particles; ++i){
+        if (particles[i].Life <= 0.0f){
+            lastUsedParticle = i;
+            return i;
+        }
+    }
+    // Otherwise, do a linear search
+    for (GLuint i = 0; i < lastUsedParticle; ++i){
+        if (particles[i].Life <= 0.0f){
+            lastUsedParticle = i;
+            return i;
+        }
+    }
+    // Override first particle if all others are alive
+    lastUsedParticle = 0;
+    return -1;
+}
+
+void RespawnParticle(Particle &particle, glm::vec3 offset)
+{
+    GLfloat random = ((rand() % 100) - 50) / 50.0f;
+    GLfloat randomX = ((rand() % 100) - 50) / 50.0f;
+    GLfloat randomZ = ((rand() % 100) - 50) / 50.0f;
+    particle.Position = random + offset;
+    particle.Life = 1.0f;
+    particle.Velocity = glm::vec3(randomX, -2.0f, randomZ);
+}
+
 int main( void )
 {
 	// Initialise GLFW
@@ -81,7 +124,7 @@ int main( void )
 	glBindVertexArray(VertexArrayID);
 
 	// Create and compile our GLSL program from the shaders
-	GLuint programID = LoadShaders( "StandardShading.vertexshader", "StandardShading.fragmentshader" );
+	GLuint programID = LoadShaders( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
 
 	// Get a handle for our "MVP" uniform
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
@@ -122,13 +165,27 @@ int main( void )
 	GLuint LightID1 = glGetUniformLocation(programID, "Light1Position_worldspace");
 	GLuint LightID2 = glGetUniformLocation(programID, "Light2Position_worldspace");
 
-	do{
+	// Get a handle for "offset" uniform
+	GLuint offsetID = glGetUniformLocation(programID, "offset");
+	GLuint scaleID = glGetUniformLocation(programID, "scale");
+	GLuint alphaID = glGetUniformLocation(programID, "alpha");
 
+	// particles
+	GLuint nr_particles = 500;
+	float dt = 0.04;
+	std::vector<Particle> particles;
+
+	for (GLuint i = 0; i < nr_particles; ++i)
+		particles.push_back(Particle());
+
+	do {
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Use our shader
 		glUseProgram(programID);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// Compute the MVP matrix from keyboard and mouse input
 		computeMatricesFromInputs();
@@ -149,11 +206,34 @@ int main( void )
 		glm::vec3 light2Pos = glm::vec3(7, 7, -7);
 		glUniform3f(LightID2, light2Pos.x, light2Pos.y, light2Pos.z);
 
+		// Uupdate all particles
+		for (GLuint i = 0; i < nr_particles; ++i)
+		{
+			Particle &p = particles[i];
+			p.Life -= dt; // reduce life
+			if (p.Life > 0.0f)
+			{	// particle is alive, thus update
+				p.Position -= p.Velocity * dt;
+			}
+		}
+		GLuint nr_new_particles = 2;
+		// Add new particles
+		for (GLuint i = 0; i < nr_new_particles; ++i)
+		{
+			int unusedParticle = FirstUnusedParticle(particles, nr_particles);
+			if (unusedParticle != -1) {
+				RespawnParticle(particles[unusedParticle], glm::vec3(0, 3, 7));
+			}
+		}
+
 		// Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, Texture);
 		// Set our "myTextureSampler" sampler to use Texture Unit 0
 		glUniform1i(TextureID, 0);
+		glUniform3f(offsetID, 0.0f, 0.0f, 0.0f);
+		glUniform1f(scaleID, 1.0f);
+		glUniform1f(alphaID, 1.0f);
 
 		// 1rst attribute buffer : vertices
 		glEnableVertexAttribArray(0);
@@ -198,6 +278,60 @@ int main( void )
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
 
+		for (Particle particle : particles)
+		{
+			if (particle.Life > 0.0f)
+			{
+				// printf("draw\n");
+				glUniform3f(offsetID, particle.Position.x, particle.Position.y, particle.Position.z);
+				glUniform1f(scaleID, 0.01f);
+				glUniform1f(alphaID, particle.Life);
+
+				// 1rst attribute buffer : vertices
+				glEnableVertexAttribArray(0);
+				glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+				glVertexAttribPointer(
+					0,                  // attribute
+					3,                  // size
+					GL_FLOAT,           // type
+					GL_FALSE,           // normalized?
+					0,                  // stride
+					(void*)0            // array buffer offset
+				);
+
+				// 2nd attribute buffer : UVs
+				glEnableVertexAttribArray(1);
+				glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+				glVertexAttribPointer(
+					1,                                // attribute
+					2,                                // size
+					GL_FLOAT,                         // type
+					GL_FALSE,                         // normalized?
+					0,                                // stride
+					(void*)0                          // array buffer offset
+				);
+
+				// 3rd attribute buffer : normals
+				glEnableVertexAttribArray(2);
+				glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+				glVertexAttribPointer(
+					2,                                // attribute
+					3,                                // size
+					GL_FLOAT,                         // type
+					GL_FALSE,                         // normalized?
+					0,                                // stride
+					(void*)0                          // array buffer offset
+				);
+
+				// Draw the triangles !
+				glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
+
+				glDisableVertexAttribArray(0);
+				glDisableVertexAttribArray(1);
+				glDisableVertexAttribArray(2);
+			}
+		}
+
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -213,6 +347,7 @@ int main( void )
 	glDeleteProgram(programID);
 	glDeleteTextures(1, &Texture);
 	glDeleteVertexArrays(1, &VertexArrayID);
+	// glDelete/
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
