@@ -38,7 +38,7 @@ int main( void )
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Open a window and create its OpenGL context
-	window = glfwCreateWindow( 1024, 768, "Tutorial 08 - Basic Shading", NULL, NULL);
+	window = glfwCreateWindow( 1024, 768, "IF3280 - OpenGL", NULL, NULL);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 		getchar();
@@ -65,8 +65,8 @@ int main( void )
     glfwPollEvents();
     glfwSetCursorPos(window, 1024/2, 768/2);
 
-	// Dark blue background
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+	// Light gray background
+	glClearColor(0.8f, 0.8f, 0.8f, 0.0f);
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
@@ -89,7 +89,7 @@ int main( void )
 	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
 
 	// Load the texture
-	GLuint Texture = loadDDS("uvmap.DDS");
+	GLuint Texture = loadJPG("textures/metallic.jpg");
 
 	// Get a handle for our "myTextureSampler" uniform
 	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
@@ -119,7 +119,8 @@ int main( void )
 
 	// Get a handle for our "LightPosition" uniform
 	glUseProgram(programID);
-	GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
+	GLuint LightID1 = glGetUniformLocation(programID, "Light1Position_worldspace");
+	GLuint LightID2 = glGetUniformLocation(programID, "Light2Position_worldspace");
 
 	do{
 
@@ -142,8 +143,11 @@ int main( void )
 		glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
 		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
-		glm::vec3 lightPos = glm::vec3(4,4,4);
-		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+		glm::vec3 light1Pos = glm::vec3(-7, 7, 7);
+		glUniform3f(LightID1, light1Pos.x, light1Pos.y, light1Pos.z);
+
+		glm::vec3 light2Pos = glm::vec3(7, 7, -7);
+		glUniform3f(LightID2, light2Pos.x, light2Pos.y, light2Pos.z);
 
 		// Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);

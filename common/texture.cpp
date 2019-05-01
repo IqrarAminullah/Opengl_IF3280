@@ -1,4 +1,6 @@
 #include "texture.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 GLuint loadBMP_custom(const char * imagepath){
 
@@ -15,7 +17,7 @@ GLuint loadBMP_custom(const char * imagepath){
 	// Open the file
 	FILE * file = fopen(imagepath,"rb");
 	if (!file){
-		printf("%s could not be opened. Are you in the right directory ? Don't forget to read the FAQ !\n", imagepath);
+		printf("%s could not be opened. Are you in the right directory ?\n", imagepath);
 		getchar();
 		return 0;
 	}
@@ -126,7 +128,7 @@ GLuint loadDDS(const char * imagepath){
 	/* try to open the file */
 	fp = fopen(imagepath, "rb");
 	if (fp == NULL){
-		printf("%s could not be opened. Are you in the right directory ? Don't forget to read the FAQ !\n", imagepath); getchar();
+		printf("%s could not be opened. Are you in the right directory ?\n", imagepath); getchar();
 		return 0;
 	}
 
@@ -134,6 +136,7 @@ GLuint loadDDS(const char * imagepath){
 	char filecode[4];
 	fread(filecode, 1, 4, fp);
 	if (strncmp(filecode, "DDS ", 4) != 0) {
+		printf("%s wrong format, DDS expected\n", imagepath); getchar();
 		fclose(fp);
 		return 0;
 	}
@@ -206,6 +209,33 @@ GLuint loadDDS(const char * imagepath){
 	free(buffer);
 
 	return textureID;
+}
 
 
+GLuint loadJPG(const char * imagepath) {
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	// set the texture wrapping/filtering options (on the currently bound texture object)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// load and generate the texture
+	int width, height, nrChannels;
+	unsigned char *data = stbi_load(imagepath, &width, &height, &nrChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		printf("Failed to load texture %s\n", imagepath);
+	}
+	stbi_image_free(data);
+
+	return textureID;
 }

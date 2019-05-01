@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef STB_IMAGE_IMPLEMENTATION
+    #include "stb_image.h"
+#endif
 
 // Load a .BMP file using our custom loader
 GLuint loadBMP_custom(const char * imagepath);
@@ -17,5 +20,7 @@ GLuint loadBMP_custom(const char * imagepath);
 
 // Load a .DDS file using GLFW's own loader
 GLuint loadDDS(const char * imagepath);
+
+GLuint loadJPG(const char * imagepath);
 
 #endif
