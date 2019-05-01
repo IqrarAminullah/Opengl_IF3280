@@ -32,6 +32,10 @@ void Particle::update()
     if (this->isAlive())
     {	// particle is alive, thus update
         this->position -= this->velocity * dt;
+        if (this->position.y <= 0) {
+            this->position.y = -this->position.y;
+            this->velocity.y = -this->velocity.y * 0.2f;
+        }
     }
 }
 
