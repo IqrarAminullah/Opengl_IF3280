@@ -1,68 +1,20 @@
-// Include standard headers
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
 
-// Include GLEW
 #include <GL/glew.h>
-
-// Include GLFW
 #include <GLFW/glfw3.h>
 GLFWwindow* window;
-
-// Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
-#include "common/shader.hpp"
-#include "common/texture.hpp"
 #include "common/controls.hpp"
 #include "common/objloader.hpp"
+#include "common/particles.hpp"
+#include "common/shader.hpp"
+#include "common/texture.hpp"
 #include "common/vboindexer.hpp"
-
-struct Particle {
-    glm::vec3 Position, Velocity;
-    GLfloat Life;
-
-    Particle() {
-		Position = glm::vec3(7.0f, 7.0f, -7.0f);
-		Velocity = glm::vec3(0.0f, -1.0f, 0.0f);
-		Life = 0.0f;
-	}
-};
-
-GLuint lastUsedParticle = 0;
-GLuint FirstUnusedParticle(std::vector<Particle>& particles, GLuint nr_particles)
-{
-    // Search from last used particle, this will usually return almost instantly
-    for (GLuint i = lastUsedParticle; i < nr_particles; ++i){
-        if (particles[i].Life <= 0.0f){
-            lastUsedParticle = i;
-            return i;
-        }
-    }
-    // Otherwise, do a linear search
-    for (GLuint i = 0; i < lastUsedParticle; ++i){
-        if (particles[i].Life <= 0.0f){
-            lastUsedParticle = i;
-            return i;
-        }
-    }
-    // Override first particle if all others are alive
-    lastUsedParticle = 0;
-    return -1;
-}
-
-void RespawnParticle(Particle &particle, glm::vec3 offset)
-{
-    GLfloat random = ((rand() % 100) - 50) / 50.0f;
-    GLfloat randomX = ((rand() % 100) - 50) / 50.0f;
-    GLfloat randomZ = ((rand() % 100) - 50) / 50.0f;
-    particle.Position = random + offset;
-    particle.Life = 1.0f;
-    particle.Velocity = glm::vec3(randomX, -2.0f, randomZ);
-}
 
 int main( void )
 {
@@ -171,12 +123,7 @@ int main( void )
 	GLuint alphaID = glGetUniformLocation(programID, "alpha");
 
 	// particles
-	GLuint nr_particles = 500;
-	float dt = 0.04;
-	std::vector<Particle> particles;
-
-	for (GLuint i = 0; i < nr_particles; ++i)
-		particles.push_back(Particle());
+	ParticleGenerator* asap = new ParticleGenerator(500, 0.04f, "models/jimny2.obj");
 
 	do {
 		// Clear the screen
@@ -206,25 +153,7 @@ int main( void )
 		glm::vec3 light2Pos = glm::vec3(7, 7, -7);
 		glUniform3f(LightID2, light2Pos.x, light2Pos.y, light2Pos.z);
 
-		// Uupdate all particles
-		for (GLuint i = 0; i < nr_particles; ++i)
-		{
-			Particle &p = particles[i];
-			p.Life -= dt; // reduce life
-			if (p.Life > 0.0f)
-			{	// particle is alive, thus update
-				p.Position -= p.Velocity * dt;
-			}
-		}
-		GLuint nr_new_particles = 2;
-		// Add new particles
-		for (GLuint i = 0; i < nr_new_particles; ++i)
-		{
-			int unusedParticle = FirstUnusedParticle(particles, nr_particles);
-			if (unusedParticle != -1) {
-				RespawnParticle(particles[unusedParticle], glm::vec3(0, 3, 7));
-			}
-		}
+		asap->update();
 
 		// Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
@@ -278,59 +207,7 @@ int main( void )
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
 
-		for (Particle particle : particles)
-		{
-			if (particle.Life > 0.0f)
-			{
-				// printf("draw\n");
-				glUniform3f(offsetID, particle.Position.x, particle.Position.y, particle.Position.z);
-				glUniform1f(scaleID, 0.01f);
-				glUniform1f(alphaID, particle.Life);
-
-				// 1rst attribute buffer : vertices
-				glEnableVertexAttribArray(0);
-				glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-				glVertexAttribPointer(
-					0,                  // attribute
-					3,                  // size
-					GL_FLOAT,           // type
-					GL_FALSE,           // normalized?
-					0,                  // stride
-					(void*)0            // array buffer offset
-				);
-
-				// 2nd attribute buffer : UVs
-				glEnableVertexAttribArray(1);
-				glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-				glVertexAttribPointer(
-					1,                                // attribute
-					2,                                // size
-					GL_FLOAT,                         // type
-					GL_FALSE,                         // normalized?
-					0,                                // stride
-					(void*)0                          // array buffer offset
-				);
-
-				// 3rd attribute buffer : normals
-				glEnableVertexAttribArray(2);
-				glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-				glVertexAttribPointer(
-					2,                                // attribute
-					3,                                // size
-					GL_FLOAT,                         // type
-					GL_FALSE,                         // normalized?
-					0,                                // stride
-					(void*)0                          // array buffer offset
-				);
-
-				// Draw the triangles !
-				glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
-
-				glDisableVertexAttribArray(0);
-				glDisableVertexAttribArray(1);
-				glDisableVertexAttribArray(2);
-			}
-		}
+		asap->draw(programID);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
