@@ -19,7 +19,7 @@ void initText2D(const char * texturePath){
 	Text2DShaderID = LoadShaders( "TextVertexShader.vertexshader", "TextVertexShader.fragmentshader" );
 
 	// Initialize uniforms' IDs
-	Text2DUniformID = glGetUniformLocation( Text2DShaderID, "myTextureSampler" );
+	Text2DUniformID = glGetUniformLocation( Text2DShaderID, "textureSampler" );
 
 }
 
@@ -71,7 +71,7 @@ void printText2D(const char * text, int x, int y, int size){
 	// Bind texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, Text2DTextureID);
-	// Set our "myTextureSampler" sampler to use Texture Unit 0
+	// Set our "textureSampler" sampler to use Texture Unit 0
 	glUniform1i(Text2DUniformID, 0);
 
 	// 1rst attribute buffer : vertices

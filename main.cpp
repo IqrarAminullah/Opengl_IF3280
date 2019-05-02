@@ -76,18 +76,19 @@ int main( void )
 	glBindVertexArray(VertexArrayID);
 
 	// Create and compile our GLSL program from the shaders
-	GLuint programID = LoadShaders( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
+	GLuint shaderID = LoadShaders( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
 
 	// Get a handle for our "MVP" uniform
-	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
-	GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
-	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
+	GLuint MatrixID = glGetUniformLocation(shaderID, "MVP");
+	GLuint ViewMatrixID = glGetUniformLocation(shaderID, "V");
+	GLuint ModelMatrixID = glGetUniformLocation(shaderID, "M");
 
-	// Load the texture
-	GLuint Texture = loadJPG("textures/metallic.jpg");
+	// Load all textures
+	GLuint metallicTexture = loadJPG("textures/metallic.jpg");
+	GLuint waterTexture = loadJPG("textures/water.jpg");
 
-	// Get a handle for our "myTextureSampler" uniform
-	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
+	// Get a handle for our "textureSampler" uniform
+	GLuint textureID  = glGetUniformLocation(shaderID, "textureSampler");
 
 	// Read our .obj file
 	std::vector<glm::vec3> vertices;
@@ -113,24 +114,26 @@ int main( void )
 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
 
 	// Get a handle for our "LightPosition" uniform
-	glUseProgram(programID);
-	GLuint LightID1 = glGetUniformLocation(programID, "Light1Position_worldspace");
-	GLuint LightID2 = glGetUniformLocation(programID, "Light2Position_worldspace");
+	glUseProgram(shaderID);
+	GLuint LightID1 = glGetUniformLocation(shaderID, "Light1Position_worldspace");
+	GLuint LightID2 = glGetUniformLocation(shaderID, "Light2Position_worldspace");
 
 	// Get a handle for "offset" uniform
-	GLuint offsetID = glGetUniformLocation(programID, "offset");
-	GLuint scaleID = glGetUniformLocation(programID, "scale");
-	GLuint alphaID = glGetUniformLocation(programID, "alpha");
+	GLuint offsetID = glGetUniformLocation(shaderID, "offset");
+	GLuint scaleID = glGetUniformLocation(shaderID, "scale");
+	GLuint alphaID = glGetUniformLocation(shaderID, "alpha");
 
 	// particles
 	ParticleGenerator* asap = new ParticleGenerator(200, 0.04f, "models/raindrop.obj");
 	asap->setInitialPosition(glm::vec3(0.0f, 3.0f, 7.0f), glm::vec3(0.5f, 0.5f, 0.5f));
 	asap->setInitialVelocity(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(1.0f, 0.1f, 1.0f));
+	asap->useTexture(metallicTexture);
 	asap->scale(0.1f);
 
 	ParticleGenerator* hujan = new ParticleGenerator(500, 0.01f, "models/raindrop.obj");
 	hujan->setInitialPosition(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(10.0f, 0.1f, 10.0f));
 	hujan->setInitialVelocity(glm::vec3(0.0f, 20.0f, 0.0f), glm::vec3(1.0f, 0.1f, 1.0f));
+	hujan->useTexture(waterTexture);
 	hujan->scale(0.1f);
 
 	do {
@@ -138,7 +141,7 @@ int main( void )
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Use our shader
-		glUseProgram(programID);
+		glUseProgram(shaderID);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -164,11 +167,7 @@ int main( void )
 		asap->update();
 		hujan->update();
 
-		// Bind our texture in Texture Unit 0
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, Texture);
-		// Set our "myTextureSampler" sampler to use Texture Unit 0
-		glUniform1i(TextureID, 0);
+		glUniform1i(textureID, metallicTexture);
 		glUniform3f(offsetID, 0.0f, 0.0f, 0.0f);
 		glUniform1f(scaleID, 1.0f);
 		glUniform1f(alphaID, 1.0f);
@@ -216,8 +215,8 @@ int main( void )
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
 
-		asap->draw(programID);
-		hujan->draw(programID);
+		asap->draw(shaderID);
+		hujan->draw(shaderID);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -231,8 +230,9 @@ int main( void )
 	glDeleteBuffers(1, &vertexbuffer);
 	glDeleteBuffers(1, &uvbuffer);
 	glDeleteBuffers(1, &normalbuffer);
-	glDeleteProgram(programID);
-	glDeleteTextures(1, &Texture);
+	glDeleteProgram(shaderID);
+	glDeleteTextures(1, &metallicTexture);
+	glDeleteTextures(1, &waterTexture);
 	glDeleteVertexArrays(1, &VertexArrayID);
 	// glDelete/
 

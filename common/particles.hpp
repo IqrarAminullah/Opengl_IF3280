@@ -17,6 +17,7 @@ class Particle {
         void update();
         void draw(GLuint shaders);
         void scale(GLfloat scaleFactor);
+        void useTexture(GLuint textureID);
 
     private:
         glm::vec3 position;
@@ -30,6 +31,7 @@ class Particle {
         GLuint normalbuffer;
 
         GLuint numVertices;
+        GLuint textureID;
 };
 
 class ParticleGenerator {
@@ -41,6 +43,7 @@ class ParticleGenerator {
         void draw(GLuint shaders);
         void setInitialPosition(glm::vec3 position, glm::vec3 randomPositionRadius);
         void setInitialVelocity(glm::vec3 velocity, glm::vec3 randomVelocityRadius);
+        void useTexture(GLuint textureID);
         void scale(GLfloat scaleFactor);
 
     private:

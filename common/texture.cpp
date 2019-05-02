@@ -216,6 +216,7 @@ GLuint loadJPG(const char * imagepath) {
 	GLuint textureID;
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
+	glBindTextureUnit(textureID, textureID);
 
 	// set the texture wrapping/filtering options (on the currently bound texture object)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

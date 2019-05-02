@@ -12,6 +12,7 @@ Particle::Particle(GLfloat dt, GLuint numVertices, GLuint vertexbuffer, GLuint u
     this->normalbuffer = normalbuffer;
 
     this->numVertices = numVertices;
+    this->textureID = 0;
 
     this->scaleFactor = 1.0f;
 }
@@ -48,10 +49,12 @@ void Particle::draw(GLuint shaders)
         GLuint offsetID = glGetUniformLocation(shaders, "offset");
         GLuint scaleID = glGetUniformLocation(shaders, "scale");
         GLuint alphaID = glGetUniformLocation(shaders, "alpha");
+	    GLuint textureID  = glGetUniformLocation(shaders, "textureSampler");
 
         glUniform3f(offsetID, this->position.x, this->position.y, this->position.z);
         glUniform1f(scaleID, this->scaleFactor);
         glUniform1f(alphaID, this->life);
+		glUniform1i(textureID, this->textureID);
 
         // 1rst attribute buffer : vertices
         glEnableVertexAttribArray(0);
@@ -98,8 +101,14 @@ void Particle::draw(GLuint shaders)
     }
 }
 
-void Particle::scale(GLfloat scaleFactor) {
+void Particle::scale(GLfloat scaleFactor)
+{
     this->scaleFactor *= scaleFactor;
+}
+
+void Particle::useTexture(GLuint textureID)
+{
+    this->textureID = textureID;
 }
 
 ParticleGenerator::ParticleGenerator(GLuint nr_particles, GLfloat dt, const char * objpath)
@@ -229,5 +238,13 @@ void ParticleGenerator::scale(GLfloat scaleFactor)
     for (Particle* particle : *(this->particles))
     {
         particle->scale(scaleFactor);
+    }
+}
+
+void ParticleGenerator::useTexture(GLuint textureID)
+{
+    for (Particle* particle : *(this->particles))
+    {
+        particle->useTexture(textureID);
     }
 }
